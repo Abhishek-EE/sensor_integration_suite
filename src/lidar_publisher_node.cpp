@@ -1,0 +1,95 @@
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/point_cloud2.hpp"
+#include "sensor_integration_suite/lidarkit.hpp" // Adjust the include path based on your setup
+#include <sensor_msgs/point_cloud2_iterator.hpp>
+
+class LidarPublisherNode : public rclcpp::Node {
+public:
+    LidarPublisherNode() : Node("lidar_publisher_node") {
+       // Declare and get the lidar_uri and topic_name parameters
+        this->declare_parameter<std::string>("lidar_uri", "/dev/ttyUSB0");
+        this->declare_parameter<std::string>("topic_name", "/lidar/points");
+
+        std::string lidar_uri;
+        std::string topic_name;
+        this->get_parameter("lidar_uri", lidar_uri);
+        this->get_parameter("topic_name", topic_name);
+
+        // Initialize the LiDAR with the URI
+        lidar.set_dev_uri(lidar_uri);
+        lidar.start();
+
+        // Create a publisher on the specified topic
+        publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(topic_name, 10);
+
+        // Use a timer to fetch and publish data at a regular interval
+        timer_ = this->create_wall_timer(
+            std::chrono::milliseconds(100), // Adjust the rate as needed
+            std::bind(&LidarPublisherNode::publish_points, this));
+    }
+
+private:
+    void publish_points() {
+        auto points = lidar.get_points();
+        auto msg = convert_to_point_cloud2(points); // Implement this function
+        publisher_->publish(msg);
+    }
+
+    sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoint>& points) {
+        sensor_msgs::msg::PointCloud2 msg;
+        // Set the header of the PointCloud2 message
+        msg.header.stamp = rclcpp::Clock().now();
+        msg.header.frame_id = "map"; // or any other frame of reference
+
+        // Set the fields of the PointCloud2 message
+        msg.fields.resize(3);
+        msg.fields[0].name = "x";
+        msg.fields[0].offset = 0;
+        msg.fields[0].datatype = sensor_msgs::msg::PointField::FLOAT32;
+        msg.fields[0].count = 1;
+
+        msg.fields[1].name = "y";
+        msg.fields[1].offset = 4;
+        msg.fields[1].datatype = sensor_msgs::msg::PointField::FLOAT32;
+        msg.fields[1].count = 1;
+
+        msg.fields[2].name = "z";
+        msg.fields[2].offset = 8;
+        msg.fields[2].datatype = sensor_msgs::msg::PointField::FLOAT32;
+        msg.fields[2].count = 1;
+
+        // Set the point step and row step
+        msg.point_step = 12; // 4 bytes each for x, y, z
+        msg.row_step = msg.point_step * points.size();
+
+        // Allocate space for all points
+        msg.data.resize(msg.row_step);
+
+        // Copy the data from LidarPoint to the PointCloud2 message
+        auto msg_iter = sensor_msgs::PointCloud2Iterator<float>(msg, "x");
+        for (const auto& point : points) {
+            *msg_iter = point.x; ++msg_iter;
+            *msg_iter = point.y; ++msg_iter;
+            *msg_iter = 0.0f; // Assuming z is zero
+            ++msg_iter;
+        }
+
+        // Set other necessary fields
+        msg.height = 1; // Unordered point cloud
+        msg.width = points.size();
+        msg.is_dense = true; // Assuming no invalid (NaN, Inf) points
+        return msg;
+    }
+
+    LidarKit lidar;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
+    rclcpp::TimerBase::SharedPtr timer_;
+};
+
+int main(int argc, char** argv) {
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<LidarPublisherNode>();
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
+}
