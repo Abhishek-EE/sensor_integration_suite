@@ -8,7 +8,7 @@ def generate_launch_description():
             package='sensor_integration_suite',
             executable='lidar_publisher_node',  # Replace with your actual executable name
             name='lidar_publisher_node_hz',
-            parameters=[{'lidar_uri': 'uri_of_first_lidar', 'topic_name': '/lidar/points_hz'}],
+            parameters=[{'lidar_uri': '/dev/ttyUSB0', 'topic_name': '/lidar/points_hz'}],
             output='screen'
         ),
         # Launch the second LidarPublisherNode
@@ -16,7 +16,7 @@ def generate_launch_description():
             package='sensor_integration_suite',
             executable='lidar_publisher_node',  # Replace with your actual executable name
             name='lidar_publisher_node_vt',
-            parameters=[{'lidar_uri': 'uri_of_second_lidar', 'topic_name': '/lidar/points_vt'}],
+            parameters=[{'lidar_uri': '/dev/ttyUSB1', 'topic_name': '/lidar/points_vt'}],
             output='screen'
         )
     ])
