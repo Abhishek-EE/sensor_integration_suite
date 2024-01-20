@@ -12,11 +12,11 @@ def generate_launch_description():
             output='screen'
         ),
         # Launch the second LidarPublisherNode
-        Node(
-            package='sensor_integration_suite',
-            executable='lidar_publisher_node',  # Replace with your actual executable name
-            name='lidar_publisher_node_vt',
-            parameters=[{'lidar_uri': '/dev/ttyUSB1', 'topic_name': '/lidar/points_vt'}],
-            output='screen'
-        )
+        # Node(
+        #     package='sensor_integration_suite',
+        #     executable='lidar_publisher_node',  # Replace with your actual executable name
+        #     name='lidar_publisher_node_vt',
+        #     parameters=[{'lidar_uri': '/dev/ttyUSB1', 'topic_name': '/lidar/points_vt'}],
+        #     output='screen'
+        # )
     ])
