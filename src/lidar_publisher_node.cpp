@@ -2,6 +2,7 @@
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_integration_suite/lidarkit.hpp" // Adjust the include path based on your setup
 #include <sensor_msgs/point_cloud2_iterator.hpp>
+#include <thread>
 
 class LidarPublisherNode : public rclcpp::Node {
 public:
