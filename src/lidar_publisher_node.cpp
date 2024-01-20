@@ -72,12 +72,12 @@ sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoi
     // Iterate over the points and populate the PointCloud2 message
     unsigned char* ptr = msg.data.data();
     for (const auto& point : points) {
-        std::memcpy(ptr, &point.x, sizeof(float));
+        memcpy(ptr, &point.x, sizeof(float));
         ptr += sizeof(float);
-        std::memcpy(ptr, &point.y, sizeof(float));
+        memcpy(ptr, &point.y, sizeof(float));
         ptr += sizeof(float);
         float z = 0.0f; // Assuming z is zero
-        std::memcpy(ptr, &z, sizeof(float));
+        memcpy(ptr, &z, sizeof(float));
         ptr += sizeof(float);
     }
 
