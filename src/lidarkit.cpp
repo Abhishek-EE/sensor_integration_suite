@@ -63,9 +63,13 @@ LidarKit::LidarKit(std::string dev_uri, bool debug_mode) : dev_uri(dev_uri), deb
 
 LidarKit::~LidarKit()
 {
+    if (dev_thread && dev_thread->joinable()) {
+        dev_thread->join(); // Ensure thread is joined on destruction
+    }
     this->stop();
     this->close_device();
 }
+
 
 void LidarKit::open_device()
 {
@@ -172,28 +176,29 @@ void LidarKit::thread_loop()
     }
 }
 
-bool LidarKit::start()
-{
+bool LidarKit::start() {
     if (this->is_running) {
         return false;
     }
 
     this->is_running = true;
-    this->dev_thread = std::thread([this]() {
+    this->dev_thread = std::make_unique<std::thread>([this]() {
         thread_loop();
     });
 
     return true;
 }
 
-void LidarKit::stop()
-{
+
+void LidarKit::stop() {
     if (this->is_running) {
         this->is_running = false;
-        this->dev_thread.join();
+        if (dev_thread && dev_thread->joinable()) {
+            dev_thread->join();
+        }
+        dev_thread.reset(); // Properly dispose of the thread object
     }
 }
-
 vector<LidarPoint> LidarKit::get_points()
 {
     scoped_lock lg(points_mtx);

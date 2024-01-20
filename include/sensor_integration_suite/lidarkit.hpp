@@ -5,6 +5,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <memory>
 
 #include "sensor_integration_suite/util.hpp"
 
@@ -23,7 +24,7 @@ private:
     std::string dev_uri;
     bool debug_mode;
     std::atomic<bool> is_running;
-    std::thread dev_thread;
+    std::unique_ptr<std::thread> dev_thread;
     std::vector<LidarPoint> points;
     std::mutex points_mtx;
 
