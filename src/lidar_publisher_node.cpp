@@ -31,11 +31,11 @@ public:
 
 private:
     void publish_points() {
-        std::this_thread::sleep_for(0.1s);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         auto points = lidar.get_points();
         auto msg = convert_to_point_cloud2(points); // Implement this function
         publisher_->publish(msg);
-        std::this_thread::sleep_for(0.5s);
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 
     sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoint>& points) {
