@@ -73,8 +73,8 @@ private:
         // Copy data from ZED point cloud to ROS message
         float* data_ptr = reinterpret_cast<float*>(msg.data.data());
         int index = 0;
-        for (int y = 0; y < zed_point_cloud.getHeight(); ++y) {
-            for (int x = 0; x < zed_point_cloud.getWidth(); ++x, index += 3) {
+        for (size_t y = 0; y < zed_point_cloud.getHeight(); ++y) {
+            for (size_t x = 0; x < zed_point_cloud.getWidth(); ++x, index += 3) {
                 sl::float4 point;
                 zed_point_cloud.getValue(x, y, &point);
 

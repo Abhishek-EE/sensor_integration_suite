@@ -38,6 +38,9 @@ ament_target_dependencies(${PROJECT_NAME}
   sensor_msgs
 )
 
+# Example: Removing -Wpedantic and -Wdeprecated-copy
+add_compile_options(-Wall -Wextra -Wno-deprecated-copy) # Keep -Wall and -Wextra, ignore -Wdeprecated-copy
+
 # Declare C++ executable nodes
 add_executable(lidar_publisher_node src/lidar_publisher_node.cpp)
 ament_target_dependencies(lidar_publisher_node rclcpp sensor_msgs)
