@@ -35,6 +35,11 @@ add_executable(lidar_publisher_node src/lidar_publisher_node.cpp)
 ament_target_dependencies(lidar_publisher_node rclcpp sensor_msgs)
 target_link_libraries(lidar_publisher_node ${PROJECT_NAME})
 
+# Declare C++ executable nodes
+add_executable(zed_mini_pointcloud_publisher_node src/zed_mini_pointcloud_publisher_node.cpp)
+ament_target_dependencies(zed_mini_pointcloud_publisher_node rclcpp sensor_msgs)
+target_link_libraries(zed_mini_pointcloud_publisher_node ${PROJECT_NAME})
+
 add_executable(lidar_test_node src/lidartest.cpp)
 ament_target_dependencies(lidar_test_node rclcpp sensor_msgs)
 target_link_libraries(lidar_test_node ${PROJECT_NAME})
@@ -42,6 +47,7 @@ target_link_libraries(lidar_test_node ${PROJECT_NAME})
 install(TARGETS
   lidar_publisher_node
   lidar_test_node
+  zed_mini_pointcloud_publisher_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
