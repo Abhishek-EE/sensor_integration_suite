@@ -5,8 +5,8 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='sensor_integration_suite',  # Replace with the name of your package
-            executable='zed_mini_point_cloud_publisher',  # Replace with the name of your executable
-            name='zed_mini_point_cloud_publisher',
+            executable='zed_mini_pointcloud_publisher_node',  # Replace with the name of your executable
+            name='zed_mini_pointcloud_publisher_node',
             output='screen',
             # Add any necessary parameters here
             # parameters=[
