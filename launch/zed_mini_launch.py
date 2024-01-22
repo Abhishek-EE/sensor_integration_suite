@@ -4,7 +4,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package='your_package_name',  # Replace with the name of your package
+            package='sensor_integration_suite',  # Replace with the name of your package
             executable='zed_mini_point_cloud_publisher',  # Replace with the name of your executable
             name='zed_mini_point_cloud_publisher',
             output='screen',
