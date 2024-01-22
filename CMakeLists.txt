@@ -15,12 +15,16 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(ZED 3 REQUIRED) # Replace '3' with your ZED SDK version
+find_package(CUDA REQUIRED)
+
 
 
 include_directories(
   include
 )
 include_directories(${ZED_INCLUDE_DIRS})
+include_directories(${CUDA_INCLUDE_DIRS})
+
 
 
 # Declare a C++ library
@@ -42,7 +46,7 @@ target_link_libraries(lidar_publisher_node ${PROJECT_NAME} )
 # Declare C++ executable nodes
 add_executable(zed_mini_pointcloud_publisher_node src/zed_mini_pointcloud_publisher_node.cpp)
 ament_target_dependencies(zed_mini_pointcloud_publisher_node rclcpp sensor_msgs)
-target_link_libraries(zed_mini_pointcloud_publisher_node ${PROJECT_NAME}  ${ZED_LIBRARIES})
+target_link_libraries(zed_mini_pointcloud_publisher_node ${PROJECT_NAME}  ${ZED_LIBRARIES} ${CUDA_LIBRARIES})
 
 add_executable(lidar_test_node src/lidartest.cpp)
 ament_target_dependencies(lidar_test_node rclcpp sensor_msgs)
