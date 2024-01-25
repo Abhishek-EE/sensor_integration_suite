@@ -18,6 +18,7 @@ find_package(ZED 3 REQUIRED) # Replace '3' with your ZED SDK version
 find_package(CUDA REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 
 include_directories(
@@ -40,6 +41,7 @@ ament_target_dependencies(${PROJECT_NAME}
   sensor_msgs
   tf2
   tf2_ros
+  geometry_msgs
 )
 
 # Declare C++ executable nodes
