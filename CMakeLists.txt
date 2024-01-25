@@ -73,6 +73,7 @@ ament_target_dependencies(frame_broadcaster_node
   rclcpp
   tf2_ros
   tf2
+  geometry_msgs
 )
 target_link_libraries(frame_broadcaster_node ${PROJECT_NAME})
 
