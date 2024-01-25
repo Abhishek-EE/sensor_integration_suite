@@ -16,7 +16,6 @@ public:
 
         std::string lidar_uri;
         std::string topic_name;
-        std::string frame_id;
         
         // Retrieve the parameters
         this->get_parameter("lidar_uri", lidar_uri);
@@ -49,7 +48,7 @@ sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoi
 
     // Set the header of the PointCloud2 message
     msg.header.stamp = rclcpp::Clock().now();
-    msg.header.frame_id = frame_id; // or any other frame of reference
+    msg.header.frame_id = this->frame_id; // or any other frame of reference
 
     // Define the data structure of the PointCloud2 message
     msg.fields.resize(3);
@@ -97,6 +96,7 @@ sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoi
     LidarKit lidar;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
+    std::string frame_id;
 };
 
 int main(int argc, char** argv) {
