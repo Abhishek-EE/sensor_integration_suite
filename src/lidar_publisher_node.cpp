@@ -7,15 +7,21 @@
 class LidarPublisherNode : public rclcpp::Node {
 public:
     LidarPublisherNode() : Node("lidar_publisher_node") {
-       // Declare and get the lidar_uri and topic_name parameters
+        // Existing parameter declarations
         this->declare_parameter<std::string>("lidar_uri", "/dev/ttyUSB0");
         this->declare_parameter<std::string>("topic_name", "/lidar/points");
+        
+        // Declare the frame_id parameter
+        this->declare_parameter<std::string>("frame_id", "lidar_frame");
 
         std::string lidar_uri;
         std::string topic_name;
+        std::string frame_id;
+        
+        // Retrieve the parameters
         this->get_parameter("lidar_uri", lidar_uri);
         this->get_parameter("topic_name", topic_name);
-
+        this->get_parameter("frame_id", frame_id);
         // Initialize the LiDAR with the URI
         lidar.set_dev_uri(lidar_uri);
         lidar.start();
@@ -43,7 +49,7 @@ sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoi
 
     // Set the header of the PointCloud2 message
     msg.header.stamp = rclcpp::Clock().now();
-    msg.header.frame_id = "map"; // or any other frame of reference
+    msg.header.frame_id = frame_id; // or any other frame of reference
 
     // Define the data structure of the PointCloud2 message
     msg.fields.resize(3);

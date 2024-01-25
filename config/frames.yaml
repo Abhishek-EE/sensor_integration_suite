@@ -1,0 +1,15 @@
+transforms:
+  - parent_frame: "base_link"
+    child_frame: "lidar_frame_hz"
+    translation: [0.0, 0.0, 0.0]
+    rotation: [0.0, 0.0, 0.0]  # roll, pitch, yaw
+
+  - parent_frame: "base_link"
+    child_frame: "lidar_frame_vt"
+    translation: [0.0, 0.0, 0.0]
+    rotation: [0.0, 4.71239, 0.0]  # roll, pitch, yaw
+
+  - parent_frame: "base_link"
+    child_frame: "zed_mini_frame"
+    translation: [0.0, 0.0, 0.0]
+    rotation: [0.0, 0.0, 0.0]  # roll, pitch, yaw

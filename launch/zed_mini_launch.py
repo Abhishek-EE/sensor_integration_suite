@@ -9,8 +9,8 @@ def generate_launch_description():
             name='zed_mini_pointcloud_publisher_node',
             output='screen',
             # Add any necessary parameters here
-            # parameters=[
-            #     {'param_name': 'param_value'},
-            # ],
+            parameters=[
+                {'frame_id': 'zed_mini'},
+            ],
         ),
     ])

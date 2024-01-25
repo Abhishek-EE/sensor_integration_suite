@@ -12,6 +12,12 @@ public:
         init_params.camera_resolution = sl::RESOLUTION::HD720; // Example resolution
         init_params.depth_mode = sl::DEPTH_MODE::ULTRA; // Example depth mode
 
+         // Declare the frame_id parameter
+        this->declare_parameter<std::string>("frame_id", "zed_mini");
+        std::string frame_id;
+        
+        this->get_parameter("frame_id", frame_id);
+
         zed.open(init_params);
         if (!zed.isOpened()) {
             RCLCPP_ERROR(this->get_logger(), "Failed to open ZED camera");
@@ -44,7 +50,7 @@ private:
 
         // Set the header
         msg.header.stamp = this->get_clock()->now();
-        msg.header.frame_id = "map"; // Set the appropriate frame ID
+        msg.header.frame_id = "frame_id"; // Set the appropriate frame ID
 
         // Define the point fields
         msg.fields.resize(3);
