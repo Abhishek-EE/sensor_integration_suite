@@ -16,7 +16,7 @@ public:
 private:
     void load_and_broadcast_transforms() {
         auto frames_yaml = this->get_parameter("frames_yaml").as_string();
-        YAML::Node transform_configs = YAML::LoadFile(frames_yaml)
+        YAML::Node transform_configs = YAML::LoadFile(frames_yaml);
         for (const auto& transform : transform_configs) {
             YAML::Node transform = YAML::Load(transform_param);
 
