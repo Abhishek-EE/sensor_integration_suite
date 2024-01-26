@@ -31,7 +31,7 @@ private:
 
             auto rotation = transform["rotation"];
             tf2::Quaternion q;
-            q.setRPY(rotaion[0].as<double>(),rotaion[1].as<double>(),rotaion[2].as<double>());
+            q.setRPY(rotation[0].as<double>(),rotation[1].as<double>(),rotation[2].as<double>());
             t.transform.rotation.x = q.x();
             t.transform.rotation.y = q.y();
             t.transform.rotation.z = q.z();
