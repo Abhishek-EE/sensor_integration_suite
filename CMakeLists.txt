@@ -19,6 +19,8 @@ find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(ZED 4 REQUIRED) # Replace '3' with your ZED SDK version
 find_package(CUDA REQUIRED)
+find_package(yaml-cpp REQUIRED)
+
 
 include_directories(
   include
@@ -26,20 +28,20 @@ include_directories(
   ${CUDA_INCLUDE_DIRS}
 )
 
-include(FetchContent)
+# include(FetchContent)
 
-FetchContent_Declare(
-  yaml-cpp
-  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
-  GIT_TAG <tag_name> # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
-)
-FetchContent_GetProperties(yaml-cpp)
+# FetchContent_Declare(
+#   yaml-cpp
+#   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+#   GIT_TAG <tag_name> # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
+# )
+# FetchContent_GetProperties(yaml-cpp)
 
-if(NOT yaml-cpp_POPULATED)
-  message(STATUS "Fetching yaml-cpp...")
-  FetchContent_Populate(yaml-cpp)
-  add_subdirectory(${yaml-cpp_SOURCE_DIR} ${yaml-cpp_BINARY_DIR})
-endif()
+# if(NOT yaml-cpp_POPULATED)
+#   message(STATUS "Fetching yaml-cpp...")
+#   FetchContent_Populate(yaml-cpp)
+#   add_subdirectory(${yaml-cpp_SOURCE_DIR} ${yaml-cpp_BINARY_DIR})
+# endif()
 
 # Declare a C++ library
 add_library(${PROJECT_NAME}
