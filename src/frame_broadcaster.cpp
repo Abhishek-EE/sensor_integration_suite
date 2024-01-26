@@ -7,7 +7,7 @@
 class FrameBroadcasterNode : public rclcpp::Node {
 public:
     FrameBroadcasterNode() : Node("frame_broadcaster_node") {
-        this->declare_parameter<std::vector<std::string>>("transforms", {});
+        this->declare_parameter<std::string>("frames_yaml", {});
         tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
 
         load_and_broadcast_transforms();
@@ -15,8 +15,9 @@ public:
 
 private:
     void load_and_broadcast_transforms() {
-        auto transforms_param = this->get_parameter("transforms").as_string_array();
-        for (const auto& transform_param : transforms_param) {
+        auto frames_yaml = this->get_parameter("frames_yaml").as_string();
+        YAML::Node transform_configs = YAML::LoadFile(frames_yaml)
+        for (const auto& transform : transform_configs) {
             YAML::Node transform = YAML::Load(transform_param);
 
             geometry_msgs::msg::TransformStamped t;

@@ -9,15 +9,15 @@ def generate_launch_description():
     # config_directory = os.path.join(get_package_share_directory('sensor_integration_suite'), 'config')
     config_directory = os.path.join(get_package_share_directory('sensor_integration_suite'))
     frames_yaml = os.path.join(config_directory, 'frames.yaml')
-    with open(frames_yaml, 'r') as file:
-        frames_config = yaml.safe_load(file)
+    # with open(frames_yaml, 'r') as file:
+    #     frames_config = yaml.safe_load(file)
 
     return LaunchDescription([
         Node(
             package='sensor_integration_suite',
             executable='frame_broadcaster',
             name='frame_broadcaster_node',
-            parameters=[frames_config],
+            parameters=[frames_yaml],
         ),
         Node(
             package='sensor_integration_suite',
