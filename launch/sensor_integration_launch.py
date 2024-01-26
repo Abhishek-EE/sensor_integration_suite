@@ -6,7 +6,7 @@ import os
 
 def generate_launch_description():
     # Load the frames.yaml file
-    config_directory = os.path.join(get_package_share_directory('your_package'), 'config')
+    config_directory = os.path.join(get_package_share_directory('sensor_integration_suite'), 'config')
     frames_yaml = os.path.join(config_directory, 'frames.yaml')
     with open(frames_yaml, 'r') as file:
         frames_config = yaml.safe_load(file)
