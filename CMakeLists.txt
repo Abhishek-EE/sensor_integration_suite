@@ -93,7 +93,7 @@ ament_target_dependencies(frame_broadcaster_node
   geometry_msgs
   yaml-cpp
 )
-target_link_libraries(frame_broadcaster_node ${PROJECT_NAME})
+target_link_libraries(frame_broadcaster_node yaml-cpp ${PROJECT_NAME})
 
 install(TARGETS
   lidar_publisher_node
