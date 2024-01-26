@@ -18,8 +18,6 @@ private:
         auto frames_yaml = this->get_parameter("frames_yaml").as_string();
         YAML::Node transform_configs = YAML::LoadFile(frames_yaml);
         for (const auto& transform : transform_configs) {
-            YAML::Node transform = YAML::Load(transform_param);
-
             geometry_msgs::msg::TransformStamped t;
             t.header.frame_id = transform["parent_frame"].as<std::string>();
             t.child_frame_id = transform["child_frame"].as<std::string>();
