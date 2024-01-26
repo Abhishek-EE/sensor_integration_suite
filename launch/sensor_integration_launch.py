@@ -15,7 +15,7 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='sensor_integration_suite',
-            executable='frame_broadcaster',
+            executable='frame_broadcaster_node',
             name='frame_broadcaster_node',
             parameters=[frames_yaml],
         ),
