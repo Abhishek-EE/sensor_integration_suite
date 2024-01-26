@@ -70,21 +70,21 @@ ament_target_dependencies(lidar_test_node
 )
 target_link_libraries(lidar_test_node ${PROJECT_NAME})
 
-add_executable(frame_broadcaster_node src/frame_broadcaster.cpp)
-ament_target_dependencies(frame_broadcaster_node
+add_executable(frame_broadcaster src/frame_broadcaster.cpp)
+ament_target_dependencies(frame_broadcaster
   rclcpp
   tf2_ros
   tf2
   geometry_msgs
   yaml-cpp
 )
-target_link_libraries(frame_broadcaster_node yaml-cpp ${PROJECT_NAME})
+target_link_libraries(frame_broadcaster yaml-cpp ${PROJECT_NAME})
 
 install(TARGETS
   lidar_publisher_node
   lidar_test_node
   zed_mini_pointcloud_publisher_node
-  frame_broadcaster_node
+  frame_broadcaster
   DESTINATION lib/${PROJECT_NAME}
 )
 
