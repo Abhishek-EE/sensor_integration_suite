@@ -10,7 +10,7 @@ def generate_launch_description():
             output='screen',
             # Add any necessary parameters here
             parameters=[
-                {'frame_id': 'zed_mini'},
+                {'frame_id': 'zed_mini_frame'},
             ],
         ),
     ])
