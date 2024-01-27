@@ -19,7 +19,6 @@ find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(ZED 4 REQUIRED) # Replace '3' with your ZED SDK version
 find_package(CUDA REQUIRED)
-find_package(yaml-cpp REQUIRED)
 
 
 include_directories(
@@ -70,21 +69,10 @@ ament_target_dependencies(lidar_test_node
 )
 target_link_libraries(lidar_test_node ${PROJECT_NAME})
 
-add_executable(frame_broadcaster src/frame_broadcaster.cpp)
-ament_target_dependencies(frame_broadcaster
-  rclcpp
-  tf2_ros
-  tf2
-  geometry_msgs
-  yaml-cpp
-)
-target_link_libraries(frame_broadcaster yaml-cpp ${PROJECT_NAME})
-
 install(TARGETS
   lidar_publisher_node
   lidar_test_node
   zed_mini_pointcloud_publisher_node
-  frame_broadcaster
   DESTINATION lib/${PROJECT_NAME}
 )
 
