@@ -6,8 +6,8 @@ import os
 
 def generate_launch_description():
     # Load the YAML file with transform configurations
-    config_directory = os.path.join(get_package_share_directory('your_package_name'), 'config')
-    yaml_file = os.path.join(config_directory, 'transforms.yaml')
+    config_directory = os.path.join(get_package_share_directory('sensor_integration_suite'))
+    yaml_file = os.path.join(config_directory, 'frames.yaml')
     
     with open(yaml_file, 'r') as file:
         transforms_config = yaml.safe_load(file)['transforms']
