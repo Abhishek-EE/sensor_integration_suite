@@ -1,4 +1,10 @@
 transforms:
+
+  - parent_frame: "map"
+    child_frame: "base_link"
+    translation: [0.0, 0.0, 0.0]
+    rotation: [0.0, 0.0, 0.0]  # roll, pitch, yaw
+
   - parent_frame: "base_link"
     child_frame: "lidar_frame_hz"
     translation: [0.0, 0.0, 0.0]
