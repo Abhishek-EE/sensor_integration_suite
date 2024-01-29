@@ -17,13 +17,13 @@ find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(ZED 4 REQUIRED) # Replace '3' with your ZED SDK version
+find_package(PCL REQUIRED)
 find_package(CUDA REQUIRED)
 
 
 include_directories(
   include
-  ${ZED_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
   ${CUDA_INCLUDE_DIRS}
 )
 
@@ -39,6 +39,7 @@ ament_target_dependencies(${PROJECT_NAME}
   tf2
   tf2_ros
   geometry_msgs
+  PCL
 )
 
 # Declare C++ executable nodes
@@ -51,15 +52,7 @@ ament_target_dependencies(lidar_publisher_node
 )
 target_link_libraries(lidar_publisher_node ${PROJECT_NAME})
 
-add_executable(zed_mini_pointcloud_publisher_node src/zed_mini_pointcloud_publisher_node.cpp)
-ament_target_dependencies(zed_mini_pointcloud_publisher_node
-  rclcpp
-  sensor_msgs
-  ZED
-  CUDA
-)
-target_link_libraries(zed_mini_pointcloud_publisher_node ${PROJECT_NAME} ${ZED_LIBRARIES} ${CUDA_LIBRARIES})
-
+#lidar_test_node
 add_executable(lidar_test_node src/lidartest.cpp)
 ament_target_dependencies(lidar_test_node
   rclcpp
@@ -69,10 +62,21 @@ ament_target_dependencies(lidar_test_node
 )
 target_link_libraries(lidar_test_node ${PROJECT_NAME})
 
+#pointcloud_fusion_node
+add_executable(pointcloud_fusion_node src/pointcloud_fusion_node.cpp)
+ament_target_dependencies(pointcloud_fusion_node
+  rclcpp
+  sensor_msgs
+  tf2
+  tf2_ros
+  PCL
+)
+target_link_libraries(pointcloud_fusion_node ${PROJECT_NAME} ${PCL_LIBRARIES})
+
+
 install(TARGETS
   lidar_publisher_node
   lidar_test_node
-  zed_mini_pointcloud_publisher_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
