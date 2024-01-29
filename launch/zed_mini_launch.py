@@ -14,7 +14,7 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='zed_wrapper',
-            executable='zed_wrapper_node',
+            executable='zed_wrapper',
             name='zed_wrapper_node',
             output='screen',
             parameters=[config],
