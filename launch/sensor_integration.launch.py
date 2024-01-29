@@ -13,11 +13,11 @@ def generate_launch_description():
         'launch'
     )
     return LaunchDescription([
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/frame_broadcaster.launch.py'])
+        # ),
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/frame_broadcaster_launch.py'])
-        ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/dual_lidar_launch.py'])
+            PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/dual_lidar.launch.py'])
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([launch_file_dir, '/zed_camera.launch.py']),
