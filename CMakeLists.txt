@@ -77,6 +77,7 @@ target_link_libraries(pointcloud_fusion_node ${PROJECT_NAME} ${PCL_LIBRARIES})
 install(TARGETS
   lidar_publisher_node
   lidar_test_node
+  pointcloud_fusion_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
