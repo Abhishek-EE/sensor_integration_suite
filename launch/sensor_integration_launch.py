@@ -1,10 +1,17 @@
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import ThisLaunchFileDir
+from launch.substitutions import LaunchConfiguration, ThisLaunchFileDir
+from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
+import os
 
 def generate_launch_description():
+    camera_model_arg = LaunchConfiguration('camera_model', default='zedm')
+    launch_file_dir = os.path.join(
+        get_package_share_directory('zed_wrapper'),
+        'launch'
+    )
     return LaunchDescription([
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/frame_broadcaster_launch.py'])
@@ -13,7 +20,8 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/dual_lidar_launch.py'])
         ),
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/zed_mini_launch.py'])
+            PythonLaunchDescriptionSource([launch_file_dir, '/zed_camera.launch.py']),
+            launch_arguments={'camera_model': camera_model_arg}.items()
         ),
         Node(
             package='sensor_integration_suite',
