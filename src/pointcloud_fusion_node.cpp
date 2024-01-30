@@ -39,7 +39,7 @@ public:
         fused_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/merged/point_cloud", 10);
 
         // Initialize the fused cloud as a shared pointer
-        fused_cloud_ = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
+        // fused_cloud_ = std::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
     }
 
 private:
@@ -65,13 +65,31 @@ private:
         // Check if all clouds have been received
         if (std::all_of(clouds_received_.begin(), clouds_received_.end(), [](const auto& pair) { return pair.second; })) {
             // All point clouds received, process and publish the fused point cloud
-            publishFusedCloud();
+            processAndCombinePointClouds();
             // Reset the flags for the next set of point clouds
             for (auto& received : clouds_received_) {
                 received.second = false;
             }
         }
     }
+    void processAndCombinePointClouds() {
+        // Here we assume all point clouds are in the same frame
+        // You need to transform them to a common frame if they are not
+        pcl::PointCloud<pcl::PointXYZ>::Ptr combined_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+        for (const auto& cloud_pair : point_clouds_) {
+            *combined_cloud += *cloud_pair.second;
+        }
+
+        // Convert the combined point cloud to ROS message
+        sensor_msgs::msg::PointCloud2 output;
+        pcl::toROSMsg(*combined_cloud, output);
+        output.header.stamp = this->get_clock()->now();
+        output.header.frame_id = "base_link"; // Replace with your frame
+
+        // Publish the combined point cloud
+        fused_pub_->publish(output);
+    }
+
 
     bool transformPointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr& cloud, 
                              sensor_msgs::msg::PointCloud2& transformed_cloud, 
@@ -86,13 +104,13 @@ private:
         return true;
     }
 
-    void publishFusedCloud() {
-        sensor_msgs::msg::PointCloud2 output;
-        pcl::toROSMsg(*fused_cloud_, output);
-        output.header.stamp = this->get_clock()->now();
-        output.header.frame_id = "base_link";
-        fused_pub_->publish(output);
-    }
+    // void publishFusedCloud() {
+    //     sensor_msgs::msg::PointCloud2 output;
+    //     pcl::toROSMsg(*fused_cloud_, output);
+    //     output.header.stamp = this->get_clock()->now();
+    //     output.header.frame_id = "base_link";
+    //     fused_pub_->publish(output);
+    // }
 
     std::map<std::string, bool> clouds_received_;
     std::map<std::string, pcl::PointCloud<pcl::PointXYZ>::Ptr> point_clouds_;
@@ -102,7 +120,7 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr lidar_hz_sub_;
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr lidar_vt_sub_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr fused_pub_;
-    std::shared_ptr<pcl::PointCloud<pcl::PointXYZ>> fused_cloud_;
+    // std::shared_ptr<pcl::PointCloud<pcl::PointXYZ>> fused_cloud_;
     tf2_ros::Buffer tf_buffer_;
     tf2_ros::TransformListener tf_listener_;
 };
