@@ -12,12 +12,16 @@ def generate_launch_description():
         get_package_share_directory('zed_wrapper'),
         'launch'
     )
+    sensor_integration_dir = os.path.join(
+        get_package_share_directory('sensor_integration_suite'),
+        'launch'
+    )
     return LaunchDescription([
         # IncludeLaunchDescription(
         #     PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/frame_broadcaster.launch.py'])
         # ),
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([ThisLaunchFileDir(), '/dual_lidar.launch.py'])
+            PythonLaunchDescriptionSource([sensor_integration_dir, '/dual_lidar.launch.py'])
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([launch_file_dir, '/zed_camera.launch.py']),
