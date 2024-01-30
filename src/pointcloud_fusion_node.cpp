@@ -41,7 +41,10 @@ public:
     }
 
 private:
-    void pointCloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
+
+ void pointCloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
         // Transform the point cloud to the common frame
         sensor_msgs::msg::PointCloud2 transformed_cloud;
         if (!transformPointCloud(msg, transformed_cloud, msg->header.frame_id)) {
@@ -49,13 +52,23 @@ private:
             return;
         }
 
-        // Convert to PCL point cloud and merge
+        // Convert to PCL point cloud
         pcl::PointCloud<pcl::PointXYZ>::Ptr current_cloud(new pcl::PointCloud<pcl::PointXYZ>());
         pcl::fromROSMsg(transformed_cloud, *current_cloud);
-        *fused_cloud_ += *current_cloud;
 
-        // Publish the fused point cloud
-        publishFusedCloud();
+        // Store the transformed cloud
+        point_clouds_[msg->header.frame_id] = current_cloud;
+        clouds_received_[msg->header.frame_id] = true;
+
+        // Check if all clouds have been received
+        if (std::all_of(clouds_received_.begin(), clouds_received_.end(), [](const auto& pair) { return pair.second; })) {
+            // All point clouds received, process and publish the fused point cloud
+            publishFusedCloud();
+            // Reset the flags for the next set of point clouds
+            for (auto& received : clouds_received_) {
+                received.second = false;
+            }
+        }
     }
 
     bool transformPointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr& cloud, 
@@ -78,6 +91,10 @@ private:
         output.header.frame_id = "base_link";
         fused_pub_->publish(output);
     }
+
+    std::map<std::string, bool> clouds_received_;
+    std::map<std::string, pcl::PointCloud<pcl::PointXYZ>::Ptr> point_clouds_;
+    std::mutex mutex_;
 
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr zed_sub_;
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr lidar_hz_sub_;
