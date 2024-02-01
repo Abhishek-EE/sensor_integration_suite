@@ -82,8 +82,13 @@ void LidarKit::open_device()
     // open device file descriptor
     this->fd = open(dev_uri.c_str(), O_RDONLY | O_NOCTTY | O_NONBLOCK); // Ensure O_NONBLOCK is used
     if (this->fd == -1) {
-        logger("Unable to open " + dev_uri + ". Error: " + strerror_s(errno)); // Use strerror(errno) for error details
-        throw std::runtime_error("Unable to open device: " + dev_uri + ". Error: " + strerror_s(errno));
+        char err_buf[1024]; // Buffer to hold the error message
+        // strerror_r is XSI-compliant version that returns an int
+        // For GNU-specific version, it returns a char* to the error message
+        strerror_r(errno, err_buf, sizeof(err_buf)); // Safely get the error message
+        std::string error_msg = std::string("Unable to open device: ") + dev_uri + ". Error: " + err_buf;
+        logger(error_msg); // Assuming logger can take a std::string
+        throw std::runtime_error(error_msg);
     } else {
         //fcntl(this->fd, F_SETFL, 0);
         fcntl(this->fd, F_SETFL, FNDELAY); // non-blocking mode (important for timeout)
