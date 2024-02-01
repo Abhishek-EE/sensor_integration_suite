@@ -34,12 +34,12 @@ public:
             std::bind(&LidarPublisherNode::publish_points, this));
 
         // Register a shutdown hook to handle Ctrl+C
-        auto shutdown_lambda = [this](const std::shared_ptr<rclcpp::contexts::DefaultContext>&) {
-            RCLCPP_INFO(this->get_logger(), "Shutdown requested");
-            shutdown_requested_ = true;
-            lidar.stop(); // Ensure the lidar stops scanning on shutdown
-        };
-        this->get_context()->on_shutdown(shutdown_lambda);
+        // auto shutdown_lambda = [this](const std::shared_ptr<rclcpp::contexts::DefaultContext>&) {
+        //     RCLCPP_INFO(this->get_logger(), "Shutdown requested");
+        //     shutdown_requested_ = true;
+        //     lidar.stop(); // Ensure the lidar stops scanning on shutdown
+        // };
+        // this->get_context()->on_shutdown(shutdown_lambda);
     }
     ~LidarPublisherNode() {
         // Ensure resources are cleaned up and threads are joined
@@ -49,6 +49,11 @@ public:
 private:
     void publish_points() {
         // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // Check if shutdown was requested
+        if (shutdown_requested_.load()) {
+            lidar.stop();
+            return; // Optionally perform additional cleanup
+        }
         auto points = lidar.get_points();
         auto msg = convert_to_point_cloud2(points); // Implement this function
         publisher_->publish(msg);
