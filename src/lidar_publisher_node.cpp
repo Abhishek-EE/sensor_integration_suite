@@ -6,7 +6,7 @@
 
 class LidarPublisherNode : public rclcpp::Node {
 public:
-    LidarPublisherNode() : Node("lidar_publisher_node") {
+    LidarPublisherNode() : Node("lidar_publisher_node"), shutdown_requested_(false) {
         // Existing parameter declarations
         this->declare_parameter<std::string>("lidar_uri", "/dev/ttyUSB0");
         this->declare_parameter<std::string>("topic_name", "/lidar/points");
@@ -32,6 +32,18 @@ public:
         timer_ = this->create_wall_timer(
             std::chrono::milliseconds(100), // Adjust the rate as needed
             std::bind(&LidarPublisherNode::publish_points, this));
+
+        // Register a shutdown hook to handle Ctrl+C
+        auto shutdown_lambda = [this](const std::shared_ptr<rclcpp::contexts::DefaultContext>&) {
+            RCLCPP_INFO(this->get_logger(), "Shutdown requested");
+            shutdown_requested_ = true;
+            lidar.stop(); // Ensure the lidar stops scanning on shutdown
+        };
+        this->get_context()->on_shutdown(shutdown_lambda);
+    }
+    ~LidarPublisherNode() {
+        // Ensure resources are cleaned up and threads are joined
+        lidar.stop();
     }
 
 private:
@@ -97,6 +109,7 @@ sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoi
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
     std::string frame_id;
+    std::atomic<bool> shutdown_requested_;
 };
 
 int main(int argc, char** argv) {

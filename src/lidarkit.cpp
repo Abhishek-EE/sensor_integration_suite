@@ -9,6 +9,8 @@
 #include <termios.h>
 #include <unistd.h>
 #include <vector>
+#include <cstring>
+#include <errno.h>
 
 using namespace std;
 
@@ -73,10 +75,15 @@ LidarKit::~LidarKit()
 
 void LidarKit::open_device()
 {
+    // Before opening the device, check if it's already open and close it if necessary
+    if (this->fd != -1) {
+        this->close_device();
+    }
     // open device file descriptor
-    this->fd = open(dev_uri.c_str(), O_RDONLY | O_NOCTTY);
+    this->fd = open(dev_uri.c_str(), O_RDONLY | O_NOCTTY | O_NONBLOCK); // Ensure O_NONBLOCK is used
     if (this->fd == -1) {
-        logger("Unable to open " + dev_uri);
+        logger("Unable to open " + dev_uri + ". Error: " + strerror_s(errno)); // Use strerror(errno) for error details
+        throw std::runtime_error("Unable to open device: " + dev_uri + ". Error: " + strerror_s(errno));
     } else {
         //fcntl(this->fd, F_SETFL, 0);
         fcntl(this->fd, F_SETFL, FNDELAY); // non-blocking mode (important for timeout)
@@ -114,6 +121,15 @@ void LidarKit::thread_loop()
     this->reset_device();
     while (this->is_running) {
         ssize_t n;
+        if (this->fd == -1) {
+            // If device is unexpectedly closed, attempt to reopen it
+            logger("Device closed unexpectedly. Attempting to reopen.");
+            this->open_device();
+            if (this->fd == -1) {
+                std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait before retrying to prevent spamming
+                continue;
+            }
+        }
         // check first byte (magic number)
         while (this->is_running) {
             n = read(this->fd, packet.data(), 1);
