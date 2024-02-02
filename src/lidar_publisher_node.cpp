@@ -4,9 +4,21 @@
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 #include <thread>
 
+std::atomic<bool> shutdown_requested_{false};
+
+void signal_handler(int signal) {
+    if (signal == SIGINT) {
+        shutdown_requested_.store(true);
+        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Signal received, initiating shutdown...");
+    }
+}
+
 class LidarPublisherNode : public rclcpp::Node {
 public:
-    LidarPublisherNode() : Node("lidar_publisher_node"), shutdown_requested_(false) {
+    LidarPublisherNode() : Node("lidar_publisher_node") {
+        // Register the signal handler
+        std::signal(SIGINT, signal_handler);
+
         // Existing parameter declarations
         this->declare_parameter<std::string>("lidar_uri", "/dev/ttyUSB0");
         this->declare_parameter<std::string>("topic_name", "/lidar/points");
@@ -42,8 +54,11 @@ public:
         // this->get_context()->on_shutdown(shutdown_lambda);
     }
     ~LidarPublisherNode() {
-        // Ensure resources are cleaned up and threads are joined
-        lidar.stop();
+        if (timer_) {
+            timer_->cancel(); // Cancel the timer to prevent new callbacks
+        }
+        lidar.stop(); // Stop the lidar before exiting
+        // Wait for any other cleanup if necessary
     }
 
 private:
@@ -51,7 +66,6 @@ private:
         // std::this_thread::sleep_for(std::chrono::milliseconds(100));
         // Check if shutdown was requested
         if (shutdown_requested_.load()) {
-            lidar.stop();
             return; // Optionally perform additional cleanup
         }
         auto points = lidar.get_points();
@@ -114,7 +128,6 @@ sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoi
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr publisher_;
     rclcpp::TimerBase::SharedPtr timer_;
     std::string frame_id;
-    std::atomic<bool> shutdown_requested_;
 };
 
 int main(int argc, char** argv) {
