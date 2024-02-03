@@ -63,7 +63,7 @@ public:
 
 private:
     void publish_points() {
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
         // Check if shutdown was requested
         if (shutdown_requested_.load()) {
             return; // Optionally perform additional cleanup
@@ -71,7 +71,7 @@ private:
         auto points = lidar.get_points();
         auto msg = convert_to_point_cloud2(points); // Implement this function
         publisher_->publish(msg);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
 sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoint>& points) {
