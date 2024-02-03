@@ -16,6 +16,13 @@ The Sensor Integration Suite is a comprehensive ROS package designed for integra
 - CUDA (for GPU-accelerated processing)
 - `zed_ros2_wrapper` package
 
+## Hardware tested on 
+- Lidar (LD06 2D lidar)
+- stereo camers (ZedMini)
+- ubuntu 20.04
+- ros2 foxy
+- arm64
+  
 ## Installation
 
 ### Sensor Integration Suite
