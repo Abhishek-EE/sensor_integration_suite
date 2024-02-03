@@ -1,6 +1,6 @@
 # Sensor Integration Suite
 
-The Sensor Integration Suite is a comprehensive ROS package designed for integrating and processing data from multiple sensors. It leverages data from LiDAR devices and ZED stereo cameras to provide a fused point cloud, which can be utilized for various applications such as 3D mapping, navigation, and object detection.
+The Sensor Integration Suite is a comprehensive ROS package designed for integrating and processing data from multiple sensors. It leverages data from LiDAR devices and ZED stereo cameras to provide a fused point cloud, which can be utilized for various applications such as 3D mapping, navigation, and object detection. It is specifically designed to read data from LD06 LIDAR
 
 ## Features
 
