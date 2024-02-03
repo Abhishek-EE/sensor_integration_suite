@@ -1,0 +1,17 @@
+transforms:
+  - parent_frame: "map"
+    child_frame: "base_link"
+    translation: [0.0, 0.0, 0.2] # x, y, z in meters
+    rotation: [0.0, 0.0, 0.0, 1.0] # Quaternion (x, y, z, w)
+  
+  - parent_frame: "base_link"
+    child_frame: "horizontal_laser_link"
+    translation: [0.2, 0.0, 0.2] # x, y, z in meters
+    rotation: [0.0, 0.0, 0.0, 1.0] # Quaternion (x, y, z, w)
+
+  - parent_frame: "base_link"
+    child_frame: "vertical_laser_link"
+    translation: [0.2, 0.0, 0.2] # x, y, z in meters
+    rotation: [0.0, 0.0, 0.0, 1.0] # Quaternion (x, y, z, w)
+  
+  # Add additional transforms as needed
