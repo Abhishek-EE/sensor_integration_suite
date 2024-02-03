@@ -6,7 +6,7 @@ import os
 def generate_launch_description():
     # Set the path to the ZED config file
     config = os.path.join(
-        get_package_share_directory('sensor_integration_suite'),
+        get_package_share_directory('zed_wrapper'),
         'config',
         'zedm.yaml'
     )
