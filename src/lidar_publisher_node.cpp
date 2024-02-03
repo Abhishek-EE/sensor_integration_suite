@@ -4,21 +4,10 @@
 #include <sensor_msgs/point_cloud2_iterator.hpp>
 #include <thread>
 
-std::atomic<bool> shutdown_requested_{false};
-
-void signal_handler(int signal) {
-    if (signal == SIGINT) {
-        shutdown_requested_.store(true);
-        RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "Signal received, initiating shutdown...");
-    }
-}
 
 class LidarPublisherNode : public rclcpp::Node {
 public:
     LidarPublisherNode() : Node("lidar_publisher_node") {
-        // Register the signal handler
-        std::signal(SIGINT, signal_handler);
-
         // Existing parameter declarations
         this->declare_parameter<std::string>("lidar_uri", "/dev/ttyUSB0");
         this->declare_parameter<std::string>("topic_name", "/lidar/points");
@@ -45,18 +34,8 @@ public:
             std::chrono::milliseconds(100), // Adjust the rate as needed
             std::bind(&LidarPublisherNode::publish_points, this));
 
-        // Register a shutdown hook to handle Ctrl+C
-        // auto shutdown_lambda = [this](const std::shared_ptr<rclcpp::contexts::DefaultContext>&) {
-        //     RCLCPP_INFO(this->get_logger(), "Shutdown requested");
-        //     shutdown_requested_ = true;
-        //     lidar.stop(); // Ensure the lidar stops scanning on shutdown
-        // };
-        // this->get_context()->on_shutdown(shutdown_lambda);
     }
     ~LidarPublisherNode() {
-        if (timer_) {
-            timer_->cancel(); // Cancel the timer to prevent new callbacks
-        }
         lidar.stop(); // Stop the lidar before exiting
         // Wait for any other cleanup if necessary
     }
@@ -65,9 +44,6 @@ private:
     void publish_points() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         // Check if shutdown was requested
-        if (shutdown_requested_.load()) {
-            return; // Optionally perform additional cleanup
-        }
         auto points = lidar.get_points();
         auto msg = convert_to_point_cloud2(points); // Implement this function
         publisher_->publish(msg);
