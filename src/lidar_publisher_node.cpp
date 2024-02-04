@@ -36,18 +36,36 @@ public:
 
     }
     ~LidarPublisherNode() {
+        RCLCPP_INFO(this->get_logger(), "Shutting down LidarPublisherNode");
         lidar.stop(); // Stop the lidar before exiting
         // Wait for any other cleanup if necessary
+        RCLCPP_INFO(this->get_logger(), "LiDAR stopped successfully");
+
     }
 
 private:
     void publish_points() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        // Check if shutdown was requested
+        RCLCPP_DEBUG(this->get_logger(), "Publishing points start");
+        
+        if (!rclcpp::ok()) {
+            RCLCPP_WARN(this->get_logger(), "ROS context not valid, exiting publish_points");
+            return; // Early exit if ROS context is not valid (e.g., during shutdown)
+        }
+
+        // Existing logic to fetch and publish points...
         auto points = lidar.get_points();
-        auto msg = convert_to_point_cloud2(points); // Implement this function
-        publisher_->publish(msg);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        if (points.empty()) {
+            RCLCPP_DEBUG(this->get_logger(), "No points received from LiDAR");
+        } else {
+            auto msg = convert_to_point_cloud2(points);
+            publisher_->publish(msg);
+            RCLCPP_DEBUG(this->get_logger(), "Published %zu points", points.size());
+        }
+
+        // std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Simulate work (consider removing or adjusting for real use cases)
+
+        RCLCPP_DEBUG(this->get_logger(), "Publishing points end");
+
     }
 
 sensor_msgs::msg::PointCloud2 convert_to_point_cloud2(const std::vector<LidarPoint>& points) {
