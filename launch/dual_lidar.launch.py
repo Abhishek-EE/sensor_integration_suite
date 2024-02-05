@@ -11,7 +11,8 @@ def generate_launch_description():
             parameters=[{'lidar_uri': '/dev/ttyUSB0', 
                          'topic_name': '/lidar/points_hz',
                          'frame_id':'horizontal_laser_link'}],
-            output='screen'
+            output='screen',
+            prefix='xterm -e gdb --args'
         ),
         # Launch the second LidarPublisherNode
         Node(
@@ -21,6 +22,7 @@ def generate_launch_description():
             parameters=[{'lidar_uri': '/dev/ttyUSB1', 
                          'topic_name': '/lidar/points_vt',
                          'frame_id':'vertical_laser_link'}],
-            output='screen'
+            output='screen',
+            prefix='xterm -e gdb --args'
         )
     ])

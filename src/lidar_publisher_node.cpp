@@ -13,7 +13,7 @@ public:
         this->declare_parameter<std::string>("topic_name", "/lidar/points");
         
         // Declare the frame_id parameter
-        this->declare_parameter<std::string>("frame_id", "lidar_frame");
+        this->declare_parameter<std::string>("frame_id", "horizontal_laser_link");
 
         std::string lidar_uri;
         std::string topic_name;
