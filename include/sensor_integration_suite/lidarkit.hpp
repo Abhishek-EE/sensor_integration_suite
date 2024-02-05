@@ -32,21 +32,25 @@ private:
     void close_device();
     void reset_device();
     void thread_loop();
-
+    std::vector<LidarPoint> parse_packet_to_points(const std::vector<uint8_t>& packet);
+    float calculate_angle_for_point(size_t pointIndex, size_t totalPoints);
+    int extract_timestamp(const std::vector<uint8_t>& packet);
 public:
 
     ///
     /// Creates an state and configuration structure for the lidar device.
     /// @param dev_uri the path of the serial-connected lidar device (e.g. "/dev/ttyUSB0")
     ///
-    LidarKit(std::string dev_uri, bool debug_mode = false);
+    LidarKit(std::string dev_uri, bool debug_mode = true);
     // LidarKit(std::string dev_uri);
     void set_dev_uri(std::string uri){
         dev_uri=uri;
         this->open_device();
         if (this->fd == -1) throw std::exception();}
 
-    void set_debug_mode(bool debug_mode = false);
+    void set_debug_mode(bool debug_mode){
+        this->debug_mode = debug_mode;
+    };
 
     LidarKit() = default;
 

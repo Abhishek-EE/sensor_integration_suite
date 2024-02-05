@@ -1,5 +1,5 @@
 #include "sensor_integration_suite/lidarkit.hpp"
-
+#include <poll.h> // Include for poll()
 #include <errno.h>
 #include <exception>
 #include <fcntl.h>
@@ -51,8 +51,8 @@ uint8_t calc_crc8(uint8_t *p, uint8_t len)
     return crc;
 }
 
-LidarKit::LidarKit(std::string dev_uri, bool debug_mode) : dev_uri(dev_uri), debug_mode(debug_mode), is_running(false)
-{
+LidarKit::LidarKit(std::string dev_uri, bool debug_mode) 
+: fd(-1), dev_uri(dev_uri), debug_mode(debug_mode), is_running(false){
     this->open_device();
     if (this->fd == -1) throw std::exception();
 }
@@ -63,8 +63,10 @@ LidarKit::LidarKit(std::string dev_uri, bool debug_mode) : dev_uri(dev_uri), deb
 //     if (this->fd == -1) throw std::exception();
 // }
 
-LidarKit::~LidarKit()
-{
+LidarKit::~LidarKit() {
+    if (is_running) {
+        stop(); // Ensure the device is stopped
+    }
     if (dev_thread && dev_thread->joinable()) {
         dev_thread->join(); // Ensure thread is joined on destruction
     }
@@ -111,113 +113,200 @@ void LidarKit::open_device()
 
 void LidarKit::close_device()
 {
-    close(this->fd);
+    if (fd != -1) {
+        close(fd);
+        fd = -1;
+    }
 }
 
 void LidarKit::reset_device()
 {
-    tcflush(this->fd, TCIOFLUSH);
+    if (fd != -1) {
+        tcflush(fd, TCIOFLUSH);
+    }
 }
 
-void LidarKit::thread_loop()
-{
+// void LidarKit::thread_loop()
+// {
+//     vector<uint8_t> packet(PACKET_LEN, 0);
+//     struct pollfd fds = {fd, POLLIN, 0};
+//     this->reset_device();
+//     while (this->is_running.load()) {
+//         ssize_t n;
+//         if (this->fd == -1) {
+//             // If device is unexpectedly closed, attempt to reopen it
+//             logger("Device closed unexpectedly. Attempting to reopen.");
+//             this->open_device();
+//             if (this->fd == -1) {
+//                 std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait before retrying to prevent spamming
+//                 continue;
+//             }
+//         }
+//         // check first byte (magic number)
+//         while (this->is_running) {
+//             n = read(this->fd, packet.data(), 1);
+//             if (n == 0) continue;
+//             if (packet[0] == 0x54) break;
+//         }
+//         // get remaining bytes
+//         size_t bytes_got = 1;
+//         while (this->is_running && bytes_got < PACKET_LEN) {
+//             n = read(this->fd, packet.data() + bytes_got, PACKET_LEN - bytes_got);
+//             if (n == -1 && errno != 11) logger("Input error: " + to_string(errno));
+//             if (n == 0 || n == -1) continue;
+//             bytes_got += n;
+//         }
+
+//         if(calc_crc8(packet.data(), 46) != packet[46]) {
+// 	    if (this->debug_mode) {
+// 	        logger("Bad checksum, skipping...");
+// 	        logger("(first point confidence: " + std::to_string(packet[8]) + ")");
+// 	    }
+//             continue;
+//         }
+
+//         // read bytes, convert to words
+//         //uint16_t radar_speed_word   = static_cast<uint16_t>(packet[2]) 
+//         //                            + (static_cast<uint16_t>(packet[3])<<8);
+//         uint16_t start_angle_word   = static_cast<uint16_t>(packet[4]) 
+//                                     + (static_cast<uint16_t>(packet[5])<<8);
+//         uint16_t end_angle_word     = static_cast<uint16_t>(packet[42]) 
+//                                     + (static_cast<uint16_t>(packet[43])<<8);
+//         uint16_t timestamp_word     = static_cast<uint16_t>(packet[44]) 
+//                                     + (static_cast<uint16_t>(packet[45])<<8);
+
+//         // fix types, properly convert units
+//         //int radar_speed = radar_speed_word;
+//         double start_angle = start_angle_word / 100.0;
+//         double end_angle = end_angle_word / 100.0;
+//         int timestamp = timestamp_word;
+
+//         // calculate step, with correction
+//         double step = (end_angle >= start_angle)
+//                     ? (end_angle - start_angle) / (NUM_POINTS - 1)
+//                     : ((end_angle + 360.0) - start_angle) / (NUM_POINTS - 1);
+        
+//         // parse intermediate points
+//         for (size_t i = 0; i < NUM_POINTS; i++) {
+//             size_t j = 6 + 3*i;
+
+//             uint16_t this_dist_word = static_cast<uint16_t>(packet[j])
+//                                     + (static_cast<uint16_t>(packet[j+1])<<8);
+        
+//             double this_dist = this_dist_word / 1000.0;
+//             int this_conf = packet[j+2];
+//             double this_angle = start_angle + i*step;
+
+//             LidarPoint p(this_angle, this_dist, this_conf, timestamp);
+//             scoped_lock lg(points_mtx);
+//             this->points.push_back(p);
+//         }
+//     }
+// }
+
+void LidarKit::thread_loop() {
     vector<uint8_t> packet(PACKET_LEN, 0);
+    struct pollfd fds = {fd, POLLIN, 0};
 
-    this->reset_device();
-    while (this->is_running) {
-        ssize_t n;
-        if (this->fd == -1) {
-            // If device is unexpectedly closed, attempt to reopen it
-            logger("Device closed unexpectedly. Attempting to reopen.");
-            this->open_device();
-            if (this->fd == -1) {
-                std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait before retrying to prevent spamming
-                continue;
+    while (is_running.load()) {
+        int ret = poll(&fds, 1, 500); // 500 milliseconds timeout
+        if (ret > 0 && (fds.revents & POLLIN)) {
+            ssize_t n = read(fd, packet.data(), 1); // Initially, read the magic byte
+            if (n > 0 && packet[0] == 0x54) { // Check if the magic byte is correct
+                // Read the rest of the packet
+                size_t total_bytes_read = 1;
+                while (total_bytes_read < PACKET_LEN && is_running.load()) {
+                    n = read(fd, packet.data() + total_bytes_read, PACKET_LEN - total_bytes_read);
+                    if (n > 0) {
+                        total_bytes_read += n;
+                    } else if (n < 0 && errno != EAGAIN) {
+                        std::cerr << "Read error: " << strerror(errno) << std::endl;
+                        break; // Exit on read error
+                    }
+                }
+
+                // Process the packet if fully received
+                if (total_bytes_read == PACKET_LEN) {
+                    // Verify CRC or any packet integrity check here
+                    if (calc_crc8(packet.data(), 46) == packet[46]) {
+                        // Assuming packet parsing logic populates a temporary vector of LidarPoints
+                        std::vector<LidarPoint> new_points = parse_packet_to_points(packet);
+                        
+                        // Safely update shared points vector
+                        {
+                            std::lock_guard<std::mutex> lock(points_mtx);
+                            points.insert(points.end(), new_points.begin(), new_points.end());
+                        }
+                    }
+                }
             }
+        } else if (ret == -1) {
+            // Handle error
+            std::cerr << "Poll error: " << strerror(errno) << std::endl;
+            break; // Exit loop on polling error
         }
-        // check first byte (magic number)
-        while (this->is_running) {
-            n = read(this->fd, packet.data(), 1);
-            if (n == 0) continue;
-            if (packet[0] == 0x54) break;
-        }
-        // get remaining bytes
-        size_t bytes_got = 1;
-        while (this->is_running && bytes_got < PACKET_LEN) {
-            n = read(this->fd, packet.data() + bytes_got, PACKET_LEN - bytes_got);
-            if (n == -1 && errno != 11) logger("Input error: " + to_string(errno));
-            if (n == 0 || n == -1) continue;
-            bytes_got += n;
-        }
-
-        if(calc_crc8(packet.data(), 46) != packet[46]) {
-	    if (this->debug_mode) {
-	        logger("Bad checksum, skipping...");
-	        logger("(first point confidence: " + std::to_string(packet[8]) + ")");
-	    }
-            continue;
-        }
-
-        // read bytes, convert to words
-        //uint16_t radar_speed_word   = static_cast<uint16_t>(packet[2]) 
-        //                            + (static_cast<uint16_t>(packet[3])<<8);
-        uint16_t start_angle_word   = static_cast<uint16_t>(packet[4]) 
-                                    + (static_cast<uint16_t>(packet[5])<<8);
-        uint16_t end_angle_word     = static_cast<uint16_t>(packet[42]) 
-                                    + (static_cast<uint16_t>(packet[43])<<8);
-        uint16_t timestamp_word     = static_cast<uint16_t>(packet[44]) 
-                                    + (static_cast<uint16_t>(packet[45])<<8);
-
-        // fix types, properly convert units
-        //int radar_speed = radar_speed_word;
-        double start_angle = start_angle_word / 100.0;
-        double end_angle = end_angle_word / 100.0;
-        int timestamp = timestamp_word;
-
-        // calculate step, with correction
-        double step = (end_angle >= start_angle)
-                    ? (end_angle - start_angle) / (NUM_POINTS - 1)
-                    : ((end_angle + 360.0) - start_angle) / (NUM_POINTS - 1);
-        
-        // parse intermediate points
-        for (size_t i = 0; i < NUM_POINTS; i++) {
-            size_t j = 6 + 3*i;
-
-            uint16_t this_dist_word = static_cast<uint16_t>(packet[j])
-                                    + (static_cast<uint16_t>(packet[j+1])<<8);
-        
-            double this_dist = this_dist_word / 1000.0;
-            int this_conf = packet[j+2];
-            double this_angle = start_angle + i*step;
-
-            LidarPoint p(this_angle, this_dist, this_conf, timestamp);
-            scoped_lock lg(points_mtx);
-            this->points.push_back(p);
-        }
+        // Timeout or no data ready simply loops back to poll again
     }
+}
+
+std::vector<LidarPoint> LidarKit::parse_packet_to_points(const std::vector<uint8_t>& packet) {
+    std::vector<LidarPoint> new_points;
+    
+    // Assuming each point's data starts at a specific index and spans a defined length
+    // and that the packet format is known and consistent.
+    const size_t startPointIndex = 6; // Example starting index for data points in the packet
+    const size_t pointDataLength = 3; // Example length of data for each point
+    const size_t numberOfPoints = (PACKET_LEN - startPointIndex) / pointDataLength; // Calculate based on your packet structure
+
+    for (size_t i = 0; i < numberOfPoints; ++i) {
+        size_t index = startPointIndex + i * pointDataLength;
+
+        // Example parsing logic - adjust based on your packet data format
+        uint16_t distance = static_cast<uint16_t>(packet[index]) | static_cast<uint16_t>(packet[index + 1]) << 8;
+        uint8_t confidence = packet[index + 2];
+        
+        // Convert distance to meters (if necessary), angle calculation placeholder
+        float distanceMeters = distance / 1000.0f; // Example conversion, adjust as necessary
+        float angleDegrees = calculate_angle_for_point(i, numberOfPoints); // Placeholder function
+        int timestamp = extract_timestamp(packet); // Assume a function to extract timestamp
+
+        // Create and add the LidarPoint to the vector
+        LidarPoint point(angleDegrees, distanceMeters, confidence, timestamp);
+        new_points.push_back(point);
+    }
+
+    return new_points;
+}
+
+float LidarKit::calculate_angle_for_point(size_t pointIndex, size_t totalPoints) {
+    // Placeholder for angle calculation
+    // This should be replaced with your actual logic for calculating the angle of each point
+    float angle = static_cast<float>(pointIndex) / totalPoints * 360.0f; // Example: evenly distributed across 360 degrees
+    return angle;
+}
+
+int LidarKit::extract_timestamp(const std::vector<uint8_t>& packet) {
+    // Extract timestamp from the packet - adjust indices based on your packet structure
+    int timestamp = static_cast<int>(packet[44]) | static_cast<int>(packet[45]) << 8;
+    return timestamp;
 }
 
 bool LidarKit::start() {
-    if (this->is_running) {
-        return false;
+    std::lock_guard<std::mutex> lock(points_mtx);
+    if (!is_running) {
+        is_running = true;
+        dev_thread = std::make_unique<std::thread>(&LidarKit::thread_loop, this);
+        return true;
     }
-
-    this->is_running = true;
-    this->dev_thread = std::make_unique<std::thread>([this]() {
-        thread_loop();
-    });
-
-    return true;
+    return false;
 }
 
 
 void LidarKit::stop() {
-    if (this->is_running) {
-        this->is_running = false;
+    if (is_running.exchange(false)) {
         if (dev_thread && dev_thread->joinable()) {
             dev_thread->join();
         }
-        dev_thread.reset(); // Properly dispose of the thread object
     }
 }
 vector<LidarPoint> LidarKit::get_points()

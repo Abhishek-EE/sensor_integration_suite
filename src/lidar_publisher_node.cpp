@@ -11,19 +11,21 @@ public:
         // Existing parameter declarations
         this->declare_parameter<std::string>("lidar_uri", "/dev/ttyUSB0");
         this->declare_parameter<std::string>("topic_name", "/lidar/points");
-        
-        // Declare the frame_id parameter
         this->declare_parameter<std::string>("frame_id", "horizontal_laser_link");
+        this->declare_parameter<bool>("debug_mode", false);
 
         std::string lidar_uri;
         std::string topic_name;
+        bool debug_mode;
         
         // Retrieve the parameters
         this->get_parameter("lidar_uri", lidar_uri);
         this->get_parameter("topic_name", topic_name);
         this->get_parameter("frame_id", frame_id);
+        this->get_parameter("debug_mode",debug_mode);
         // Initialize the LiDAR with the URI
         lidar.set_dev_uri(lidar_uri);
+        lidar.set_debug_mode(debug_mode);
         lidar.start();
 
         // Create a publisher on the specified topic

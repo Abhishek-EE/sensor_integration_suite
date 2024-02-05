@@ -4,7 +4,8 @@
 #include <string>
 #include <cmath>
 
-void logger(std::string msg);
+// Simple thread-safe logger
+void logger(const std::string& msg);
 
 struct LidarPoint {
     float angle;        ///< point angle in degrees
