@@ -1,11 +1,16 @@
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+from launch.substitutions import LaunchConfiguration
 import yaml
 import os
 
 def generate_launch_description():
     # Load the YAML file with transform configurations
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time', default_value='true',
+        description='Use simulation time')
     config_directory = os.path.join(get_package_share_directory('sensor_integration_suite'))
     yaml_file = os.path.join(config_directory, 'frames.yaml')
     
@@ -33,5 +38,6 @@ def generate_launch_description():
                 arguments=arguments
             )
         )
+    transform_publishers.append(use_sim_time_arg)
 
     return LaunchDescription(transform_publishers)
