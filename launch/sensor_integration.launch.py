@@ -8,7 +8,7 @@ import os
 
 def generate_launch_description():
     use_sim_time_arg = DeclareLaunchArgument(
-        'use_sim_time', default_value='true',
+        'use_sim_time', default_value='false',
         description='Use simulation time')
     camera_model_arg = LaunchConfiguration('camera_model', default='zedm')
     launch_file_dir = os.path.join(

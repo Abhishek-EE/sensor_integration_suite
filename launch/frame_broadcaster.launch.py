@@ -9,7 +9,7 @@ import os
 def generate_launch_description():
     # Load the YAML file with transform configurations
     use_sim_time_arg = DeclareLaunchArgument(
-        'use_sim_time', default_value='true',
+        'use_sim_time', default_value='false',
         description='Use simulation time')
     config_directory = os.path.join(get_package_share_directory('sensor_integration_suite'))
     yaml_file = os.path.join(config_directory, 'frames.yaml')
