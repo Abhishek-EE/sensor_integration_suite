@@ -19,6 +19,7 @@ def generate_launch_description():
 
     # Create a list of Node actions from the loaded configurations
     transform_publishers = []
+    transform_publishers.append(use_sim_time_arg)
     for transform in transforms_config:
         translation = transform['translation']
         rotation = transform['rotation']
@@ -30,14 +31,15 @@ def generate_launch_description():
             str(rotation[0]), str(rotation[1]), str(rotation[2]),
             parent_frame, child_frame
         ]
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
 
         transform_publishers.append(
             Node(
                 package='tf2_ros',
                 executable='static_transform_publisher',
+                parameters = parameters,
                 arguments=arguments
             )
         )
-    transform_publishers.append(use_sim_time_arg)
 
     return LaunchDescription(transform_publishers)
