@@ -31,13 +31,12 @@ def generate_launch_description():
             str(rotation[0]), str(rotation[1]), str(rotation[2]),
             parent_frame, child_frame
         ]
-        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}]
 
         transform_publishers.append(
             Node(
                 package='tf2_ros',
                 executable='static_transform_publisher',
-                parameters = parameters,
+                parameters = [{'use_sim_time': LaunchConfiguration('use_sim_time')}],
                 arguments=arguments
             )
         )
