@@ -292,22 +292,27 @@ int LidarKit::extract_timestamp(const std::vector<uint8_t>& packet) {
 }
 
 bool LidarKit::start() {
+    logger("Entering start()");
     std::lock_guard<std::mutex> lock(points_mtx);
     if (!is_running) {
         is_running = true;
         dev_thread = std::make_unique<std::thread>(&LidarKit::thread_loop, this);
+        logger("Exiting start()");
         return true;
     }
+    logger("Exiting start()");
     return false;
 }
 
 
 void LidarKit::stop() {
+    logger("Stopping LidarKit");
     if (is_running.exchange(false)) {
         if (dev_thread && dev_thread->joinable()) {
             dev_thread->join();
         }
     }
+    logger("LidarKit Stopped");
 }
 vector<LidarPoint> LidarKit::get_points()
 {
