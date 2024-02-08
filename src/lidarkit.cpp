@@ -57,27 +57,23 @@ LidarKit::LidarKit(std::string dev_uri, bool debug_mode)
     if (this->fd == -1) throw std::exception();
 }
 
-// LidarKit::LidarKit(std::string dev_uri) : dev_uri(dev_uri), debug_mode(false), is_running(false)
-// {
-//     this->open_device();
-//     if (this->fd == -1) throw std::exception();
-// }
 
 LidarKit::~LidarKit() {
     if (is_running) {
-        stop(); // Ensure the device is stopped
+        this->stop();
+        this->close_device();
     }
     if (dev_thread && dev_thread->joinable()) {
         dev_thread->join(); // Ensure thread is joined on destruction
     }
-    this->stop();
-    this->close_device();
+
 }
 
 
 void LidarKit::open_device()
 {
     // Before opening the device, check if it's already open and close it if necessary
+    logger("Opening Device");
     if (this->fd != -1) {
         this->close_device();
     }
@@ -109,14 +105,17 @@ void LidarKit::open_device()
         options.c_lflag &= ~ICANON; // non-canonical mode (important for timeout)
         tcsetattr(this->fd, TCSANOW, &options);
     }
+    logger("Device Opened");
 }
 
 void LidarKit::close_device()
 {
+    logger("Closing Device");
     if (fd != -1) {
         close(fd);
         fd = -1;
     }
+    logger("Device Closed");
 }
 
 void LidarKit::reset_device()
@@ -129,7 +128,7 @@ void LidarKit::reset_device()
 void LidarKit::thread_loop()
 {
     vector<uint8_t> packet(PACKET_LEN, 0);
-    struct pollfd fds = {fd, POLLIN, 0};
+    // struct pollfd fds = {fd, POLLIN, 0};
     this->reset_device();
     while (this->is_running.load()) {
         ssize_t n;
@@ -202,93 +201,6 @@ void LidarKit::thread_loop()
             this->points.push_back(p);
         }
     }
-}
-
-// void LidarKit::thread_loop() {
-//     vector<uint8_t> packet(PACKET_LEN, 0);
-//     struct pollfd fds = {fd, POLLIN, 0};
-
-//     while (is_running.load()) {
-//         int ret = poll(&fds, 1, 500); // 500 milliseconds timeout
-//         if (ret > 0 && (fds.revents & POLLIN)) {
-//             ssize_t n = read(fd, packet.data(), 1); // Initially, read the magic byte
-//             if (n > 0 && packet[0] == 0x54) { // Check if the magic byte is correct
-//                 // Read the rest of the packet
-//                 size_t total_bytes_read = 1;
-//                 while (total_bytes_read < PACKET_LEN && is_running.load()) {
-//                     n = read(fd, packet.data() + total_bytes_read, PACKET_LEN - total_bytes_read);
-//                     if (n > 0) {
-//                         total_bytes_read += n;
-//                     } else if (n < 0 && errno != EAGAIN) {
-//                         std::cerr << "Read error: " << strerror(errno) << std::endl;
-//                         break; // Exit on read error
-//                     }
-//                 }
-
-//                 // Process the packet if fully received
-//                 if (total_bytes_read == PACKET_LEN) {
-//                     // Verify CRC or any packet integrity check here
-//                     if (calc_crc8(packet.data(), 46) == packet[46]) {
-//                         // Assuming packet parsing logic populates a temporary vector of LidarPoints
-//                         std::vector<LidarPoint> new_points = parse_packet_to_points(packet);
-                        
-//                         // Safely update shared points vector
-//                         {
-//                             std::lock_guard<std::mutex> lock(points_mtx);
-//                             points.insert(points.end(), new_points.begin(), new_points.end());
-//                         }
-//                     }
-//                 }
-//             }
-//         } else if (ret == -1) {
-//             // Handle error
-//             std::cerr << "Poll error: " << strerror(errno) << std::endl;
-//             break; // Exit loop on polling error
-//         }
-//         // Timeout or no data ready simply loops back to poll again
-//     }
-// }
-
-std::vector<LidarPoint> LidarKit::parse_packet_to_points(const std::vector<uint8_t>& packet) {
-    std::vector<LidarPoint> new_points;
-    
-    // Assuming each point's data starts at a specific index and spans a defined length
-    // and that the packet format is known and consistent.
-    const size_t startPointIndex = 6; // Example starting index for data points in the packet
-    const size_t pointDataLength = 3; // Example length of data for each point
-    const size_t numberOfPoints = (PACKET_LEN - startPointIndex) / pointDataLength; // Calculate based on your packet structure
-
-    for (size_t i = 0; i < numberOfPoints; ++i) {
-        size_t index = startPointIndex + i * pointDataLength;
-
-        // Example parsing logic - adjust based on your packet data format
-        uint16_t distance = static_cast<uint16_t>(packet[index]) | static_cast<uint16_t>(packet[index + 1]) << 8;
-        uint8_t confidence = packet[index + 2];
-        
-        // Convert distance to meters (if necessary), angle calculation placeholder
-        float distanceMeters = distance / 1000.0f; // Example conversion, adjust as necessary
-        float angleDegrees = calculate_angle_for_point(i, numberOfPoints); // Placeholder function
-        int timestamp = extract_timestamp(packet); // Assume a function to extract timestamp
-
-        // Create and add the LidarPoint to the vector
-        LidarPoint point(angleDegrees, distanceMeters, confidence, timestamp);
-        new_points.push_back(point);
-    }
-
-    return new_points;
-}
-
-float LidarKit::calculate_angle_for_point(size_t pointIndex, size_t totalPoints) {
-    // Placeholder for angle calculation
-    // This should be replaced with your actual logic for calculating the angle of each point
-    float angle = static_cast<float>(pointIndex) / totalPoints * 360.0f; // Example: evenly distributed across 360 degrees
-    return angle;
-}
-
-int LidarKit::extract_timestamp(const std::vector<uint8_t>& packet) {
-    // Extract timestamp from the packet - adjust indices based on your packet structure
-    int timestamp = static_cast<int>(packet[44]) | static_cast<int>(packet[45]) << 8;
-    return timestamp;
 }
 
 bool LidarKit::start() {
