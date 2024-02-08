@@ -52,7 +52,7 @@ public:
         this->debug_mode = debug_mode;
     };
 
-    LidarKit() = default;
+    LidarKit();
 
     ///
     /// Safely destroys the state structrure.

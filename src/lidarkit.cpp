@@ -57,6 +57,11 @@ LidarKit::LidarKit(std::string dev_uri, bool debug_mode)
     if (this->fd == -1) throw std::exception();
 }
 
+//Default Constructor
+LidarKit::LidarKit(): fd(-1),is_running(false){
+    
+}
+
 
 LidarKit::~LidarKit() {
     if (is_running) {
