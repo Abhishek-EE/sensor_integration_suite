@@ -53,24 +53,27 @@ uint8_t calc_crc8(uint8_t *p, uint8_t len)
 
 LidarKit::LidarKit(std::string dev_uri, bool debug_mode) 
 : fd(-1), dev_uri(dev_uri), debug_mode(debug_mode), is_running(false){
+    logger("Initializing LidarKit with device URI: " + dev_uri + " and debug mode: " + (debug_mode ? "enabled" : "disabled"));
     this->open_device();
     if (this->fd == -1) throw std::exception();
 }
 
 //Default Constructor
 LidarKit::LidarKit(): fd(-1),is_running(false){
-    
+
 }
 
 
 LidarKit::~LidarKit() {
     if (is_running) {
+        logger("Destructor called while still running. Stopping device.");
         this->stop();
-        this->close_device();
     }
-    if (dev_thread && dev_thread->joinable()) {
-        dev_thread->join(); // Ensure thread is joined on destruction
-    }
+    // if (dev_thread && dev_thread->joinable()) {
+    //     dev_thread->join(); // Ensure thread is joined on destruction
+    // }
+    this->close_device();
+    logger("LidarKit destructed.");
 
 }
 
@@ -78,7 +81,7 @@ LidarKit::~LidarKit() {
 void LidarKit::open_device()
 {
     // Before opening the device, check if it's already open and close it if necessary
-    logger("Opening Device");
+    logger("Opening device: " + dev_uri);
     if (this->fd != -1) {
         this->close_device();
     }
@@ -115,16 +118,17 @@ void LidarKit::open_device()
 
 void LidarKit::close_device()
 {
-    logger("Closing Device");
     if (fd != -1) {
+        logger("Closing Device: "+ dev_uri);
         close(fd);
         fd = -1;
     }
-    logger("Device Closed");
+    logger("Closed Device: "+ dev_uri);
 }
 
 void LidarKit::reset_device()
 {
+    logger("Resetting Device. ");
     if (fd != -1) {
         tcflush(fd, TCIOFLUSH);
     }
@@ -132,10 +136,12 @@ void LidarKit::reset_device()
 
 void LidarKit::thread_loop()
 {
+    logger("Starting Thread loop... ");
     vector<uint8_t> packet(PACKET_LEN, 0);
     // struct pollfd fds = {fd, POLLIN, 0};
     this->reset_device();
     while (this->is_running.load()) {
+        logger("In thread loop, before blocking operation.");
         ssize_t n;
         if (this->fd == -1) {
             // If device is unexpectedly closed, attempt to reopen it
@@ -159,6 +165,7 @@ void LidarKit::thread_loop()
             if (n == -1 && errno != 11) logger("Input error: " + to_string(errno));
             if (n == 0 || n == -1) continue;
             bytes_got += n;
+            logger("Data read successfully.");
         }
 
         if(calc_crc8(packet.data(), 46) != packet[46]) {
@@ -205,31 +212,34 @@ void LidarKit::thread_loop()
             scoped_lock lg(points_mtx);
             this->points.push_back(p);
         }
+        logger("Thread loop continue");
     }
+    logger("Thread loop Closed");
 }
 
 bool LidarKit::start() {
-    logger("Entering start()");
     std::lock_guard<std::mutex> lock(points_mtx);
     if (!is_running) {
+        logger("Starting LidarKit.");
         is_running = true;
         dev_thread = std::make_unique<std::thread>(&LidarKit::thread_loop, this);
-        logger("Exiting start()");
+        logger("LidarKit Started");
         return true;
     }
-    logger("Exiting start()");
     return false;
 }
 
 
 void LidarKit::stop() {
-    logger("Stopping LidarKit");
+
     if (is_running.exchange(false)) {
+        logger("Stopping LidarKit");
         if (dev_thread && dev_thread->joinable()) {
             dev_thread->join();
+            logger("Thread joined succesfully.");
         }
     }
-    logger("LidarKit Stopped");
+    logger("Lidar Stopped");
 }
 vector<LidarPoint> LidarKit::get_points()
 {
