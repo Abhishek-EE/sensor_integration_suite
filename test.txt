@@ -1,0 +1,15 @@
+Opening device: /dev/ttyUSB1
+/dev/ttyUSB1:Device Opened
+/dev/ttyUSB1:Starting LidarKit.
+/dev/ttyUSB1:LidarKit Started
+/dev/ttyUSB1:Starting Thread loop... 
+/dev/ttyUSB1:Resetting Device. 
+
+/dev/ttyUSB1:Stopping LidarKit
+/dev/ttyUSB1:Thread loop Closed
+
+/dev/ttyUSB1:Thread joined succesfully.
+/dev/ttyUSB1:Lidar Stopped
+Closing Device: /dev/ttyUSB1
+Closed Device: /dev/ttyUSB1
+/dev/ttyUSB1:LidarKit destructed.

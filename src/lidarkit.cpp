@@ -113,7 +113,7 @@ void LidarKit::open_device()
         options.c_lflag &= ~ICANON; // non-canonical mode (important for timeout)
         tcsetattr(this->fd, TCSANOW, &options);
     }
-    logger(dev_uri + ":" +"Device Opened");
+    logger(dev_uri + ":" +"Device Opened with fd:" + std::to_string(fd));
 }
 
 void LidarKit::close_device()
