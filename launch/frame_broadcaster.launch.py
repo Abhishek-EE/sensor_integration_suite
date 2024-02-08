@@ -1,11 +1,16 @@
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+from launch.substitutions import LaunchConfiguration
 import yaml
 import os
 
 def generate_launch_description():
     # Load the YAML file with transform configurations
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time', default_value='false',
+        description='Use simulation time')
     config_directory = os.path.join(get_package_share_directory('sensor_integration_suite'))
     yaml_file = os.path.join(config_directory, 'frames.yaml')
     
@@ -14,6 +19,7 @@ def generate_launch_description():
 
     # Create a list of Node actions from the loaded configurations
     transform_publishers = []
+    transform_publishers.append(use_sim_time_arg)
     for transform in transforms_config:
         translation = transform['translation']
         rotation = transform['rotation']
@@ -30,6 +36,7 @@ def generate_launch_description():
             Node(
                 package='tf2_ros',
                 executable='static_transform_publisher',
+                parameters = [{'use_sim_time': LaunchConfiguration('use_sim_time')}],
                 arguments=arguments
             )
         )
