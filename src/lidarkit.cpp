@@ -66,14 +66,14 @@ LidarKit::LidarKit(): fd(-1),is_running(false){
 
 LidarKit::~LidarKit() {
     if (is_running) {
-        logger("Destructor called while still running. Stopping device.");
+        logger(dev_uri + ":" +"Destructor called while still running. Stopping device.");
         this->stop();
     }
     // if (dev_thread && dev_thread->joinable()) {
     //     dev_thread->join(); // Ensure thread is joined on destruction
     // }
     this->close_device();
-    logger("LidarKit destructed.");
+    logger(dev_uri + ":" +"LidarKit destructed.");
 
 }
 
@@ -113,7 +113,7 @@ void LidarKit::open_device()
         options.c_lflag &= ~ICANON; // non-canonical mode (important for timeout)
         tcsetattr(this->fd, TCSANOW, &options);
     }
-    logger("Device Opened");
+    logger(dev_uri + ":" +"Device Opened");
 }
 
 void LidarKit::close_device()
@@ -128,7 +128,7 @@ void LidarKit::close_device()
 
 void LidarKit::reset_device()
 {
-    logger("Resetting Device. ");
+    logger(dev_uri + ":" +"Resetting Device. ");
     if (fd != -1) {
         tcflush(fd, TCIOFLUSH);
     }
@@ -136,16 +136,16 @@ void LidarKit::reset_device()
 
 void LidarKit::thread_loop()
 {
-    logger("Starting Thread loop... ");
+    logger(dev_uri + ":" +"Starting Thread loop... ");
     vector<uint8_t> packet(PACKET_LEN, 0);
     // struct pollfd fds = {fd, POLLIN, 0};
     this->reset_device();
     while (this->is_running.load()) {
-        logger("In thread loop, before blocking operation.");
+        if(this->debug_mode) logger(dev_uri + ":" +"In thread loop, before blocking operation.");
         ssize_t n;
         if (this->fd == -1) {
             // If device is unexpectedly closed, attempt to reopen it
-            logger("Device closed unexpectedly. Attempting to reopen.");
+            logger(dev_uri + ":" +"Device closed unexpectedly. Attempting to reopen.");
             this->open_device();
             if (this->fd == -1) {
                 std::this_thread::sleep_for(std::chrono::seconds(1)); // Wait before retrying to prevent spamming
@@ -162,16 +162,16 @@ void LidarKit::thread_loop()
         size_t bytes_got = 1;
         while (this->is_running && bytes_got < PACKET_LEN) {
             n = read(this->fd, packet.data() + bytes_got, PACKET_LEN - bytes_got);
-            if (n == -1 && errno != 11) logger("Input error: " + to_string(errno));
+            if (n == -1 && errno != 11) logger(dev_uri + ":" +"Input error: " + to_string(errno));
             if (n == 0 || n == -1) continue;
             bytes_got += n;
-            logger("Data read successfully.");
+            if(this->debug_mode) (dev_uri + ":" +"Data read successfully.");
         }
 
         if(calc_crc8(packet.data(), 46) != packet[46]) {
 	    if (this->debug_mode) {
-	        logger("Bad checksum, skipping...");
-	        logger("(first point confidence: " + std::to_string(packet[8]) + ")");
+	        logger(dev_uri + ":" +"Bad checksum, skipping...");
+	        logger(dev_uri + ":" +"(first point confidence: " + std::to_string(packet[8]) + ")");
 	    }
             continue;
         }
@@ -212,18 +212,18 @@ void LidarKit::thread_loop()
             scoped_lock lg(points_mtx);
             this->points.push_back(p);
         }
-        logger("Thread loop continue");
+        if(this->debug_mode) (dev_uri + ":" +"Thread loop continue");
     }
-    logger("Thread loop Closed");
+    logger(dev_uri + ":" +"Thread loop Closed");
 }
 
 bool LidarKit::start() {
     std::lock_guard<std::mutex> lock(points_mtx);
     if (!is_running) {
-        logger("Starting LidarKit.");
+        logger(dev_uri + ":" +"Starting LidarKit.");
         is_running = true;
         dev_thread = std::make_unique<std::thread>(&LidarKit::thread_loop, this);
-        logger("LidarKit Started");
+        logger(dev_uri + ":" +"LidarKit Started");
         return true;
     }
     return false;
@@ -233,13 +233,13 @@ bool LidarKit::start() {
 void LidarKit::stop() {
 
     if (is_running.exchange(false)) {
-        logger("Stopping LidarKit");
+        logger(dev_uri + ":" +"Stopping LidarKit");
         if (dev_thread && dev_thread->joinable()) {
             dev_thread->join();
-            logger("Thread joined succesfully.");
+            logger(dev_uri + ":" +"Thread joined succesfully.");
         }
     }
-    logger("Lidar Stopped");
+    logger(dev_uri + ":" +"Lidar Stopped");
 }
 vector<LidarPoint> LidarKit::get_points()
 {
