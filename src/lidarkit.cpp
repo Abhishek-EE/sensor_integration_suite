@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <vector>
 #include <cstring>
-#include <errno.h>
 
 using namespace std;
 
@@ -119,9 +118,22 @@ void LidarKit::open_device()
 void LidarKit::close_device()
 {
     if (fd != -1) {
-        logger("Closing Device: "+ dev_uri);
-        close(fd);
-        fd = -1;
+        logger("Closing Device: " + dev_uri + " with fd:" + std::to_string(fd));
+        int closeResult = close(fd);
+        if (closeResult == 0) {
+            logger("Closed Device: " + dev_uri);
+        } else {
+            char err_buf[1024]; // Buffer to hold the error message
+            // strerror_r is XSI-compliant version that returns an int
+            // For GNU-specific version, it returns a char* to the error message
+            strerror_r(errno, err_buf, sizeof(err_buf)); // Safely get the error message
+            std::string error_msg = std::string("Failed to Close Device: ") + dev_uri + ". Error: " + err_buf;
+            logger(error_msg); // Assuming logger can take a std::string
+            throw std::runtime_error(error_msg);
+        }
+        fd = -1; // Invalidate the file descriptor
+    } else {
+        logger("Device: " + dev_uri + " already closed or was never opened.");
     }
     logger("Closed Device: "+ dev_uri);
 }
