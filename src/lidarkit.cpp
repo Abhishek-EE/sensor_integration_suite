@@ -85,7 +85,7 @@ void LidarKit::open_device()
         this->close_device();
     }
     // open device file descriptor
-    this->fd = open(dev_uri.c_str(), O_RDONLY | O_NOCTTY | O_NONBLOCK); // Ensure O_NONBLOCK is used
+    this->fd = open(dev_uri.c_str(), O_RDONLY | O_NOCTTY | O_NONBLOCK | O_EXCL); // Ensure O_NONBLOCK is used
     if (this->fd == -1) {
         char err_buf[1024]; // Buffer to hold the error message
         // strerror_r is XSI-compliant version that returns an int
