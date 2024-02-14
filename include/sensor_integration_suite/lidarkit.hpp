@@ -27,6 +27,7 @@ private:
     std::unique_ptr<std::thread> dev_thread;
     std::vector<LidarPoint> points;
     std::mutex points_mtx;
+    std::mutex open_mtx;
 
     void open_device();
     void close_device();

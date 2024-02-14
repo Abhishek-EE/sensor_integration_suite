@@ -80,6 +80,7 @@ LidarKit::~LidarKit() {
 void LidarKit::open_device()
 {
     // Before opening the device, check if it's already open and close it if necessary
+    std::lock_guard<std::mutex> lock(open_mtx);
     logger("Opening device: " + dev_uri);
     if (this->fd != -1) {
         this->close_device();
