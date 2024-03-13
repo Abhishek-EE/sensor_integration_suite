@@ -6,12 +6,12 @@ transforms:
   
   - parent_frame: "base_link"
     child_frame: "horizontal_laser_link"
-    translation: [0.2, 0.0, 0.2] # x, y, z in meters
+    translation: [-0.04, 0.0, 0.07] # x, y, z in meters
     rotation: [0.0, 0.0, 0.0] # rpy in radians
 
   - parent_frame: "base_link"
     child_frame: "vertical_laser_link"
-    translation: [0.2, 0.0, 0.2] # x, y, z in meters
+    translation: [-0.192, 0.0, 0.005] # x, y, z in meters
     rotation: [0.0, 1.507, 0.0] # rpy in radians
   
   # Add additional transforms as needed
