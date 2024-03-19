@@ -11,7 +11,9 @@ def generate_launch_description():
     use_sim_time_arg = DeclareLaunchArgument(
         'use_sim_time', default_value='false',
         description='Use simulation time')
-    config_directory = os.path.join(get_package_share_directory('sensor_integration_suite'))
+    config_directory = os.path.join(get_package_share_directory('sensor_integration_suite'),
+                                    'config')
+    
     yaml_file = os.path.join(config_directory, 'frames.yaml')
     
     with open(yaml_file, 'r') as file:

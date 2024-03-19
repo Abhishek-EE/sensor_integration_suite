@@ -12,9 +12,9 @@ def generate_launch_description():
         # Launch the first LidarPublisherNode
         Node(
             package='sensor_integration_suite',
-            executable='lidar_publisher_node',  # Replace with your actual executable name
+            executable='lidar_publisher_node',  
             name='lidar_publisher_node_hz',
-            parameters=[{'lidar_uri': '/dev/ttyUSB0', 
+            parameters=[{'lidar_uri': '/dev/ttyUSB1', 
                          'topic_name': '/lidar/points_hz',
                          'frame_id':'horizontal_laser_link',
                          'use_sim_time':LaunchConfiguration('use_sim_time')}],
@@ -25,7 +25,7 @@ def generate_launch_description():
             package='sensor_integration_suite',
             executable='lidar_publisher_node',  # Replace with your actual executable name
             name='lidar_publisher_node_vt',
-            parameters=[{'lidar_uri': '/dev/ttyUSB1', 
+            parameters=[{'lidar_uri': '/dev/ttyUSB0', 
                          'topic_name': '/lidar/points_vt',
                          'frame_id':'vertical_laser_link',
                          'use_sim_time':LaunchConfiguration('use_sim_time')}],
